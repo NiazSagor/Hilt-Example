@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
+import javax.inject.Qualifier
 
 /*
 * Module is where we declare the dependency to build objects that needs interface or third party libraries
@@ -40,10 +41,22 @@ class BClass {
     * A string dependency that HILT will use where a string dependency is needed
     * Like the above provider method needs a string dependency
     * */
+    @AStringDependency1
     @ActivityScoped
     @Provides
     fun provideSomeStringDependency(): String {
         return "a string dependency"
+    }
+
+    /*
+    * There are 2 provider methods that return same data type
+    * So these provider methods are annotated with different annotation in order to HILT to distinguish
+    * */
+    @AStringDependency2
+    @ActivityScoped
+    @Provides
+    fun provideSomeOtherStringDependency(): String {
+        return "another string dependency"
     }
 
 }
@@ -57,9 +70,17 @@ class SomeClassThatImplementsAnInterface : SomeOtherInterface {
 
     private lateinit var someDependency: String
 
-    // indicating that we need a dependency coming from HILT to generate this class
+    /*
+    * @Inject indicating that we need a dependency coming from HILT to generate this class
+    * the constructor argument is annotated with a custom specific annotation
+    * that we made to indicate HILT
+    * which of the provider methods to use
+    * as here, the constructor argument is annotated with @AStringDependency1
+    * HILT knows that it has to get the string dependency from a provider method
+    * which is annotated with @AStringDependency1
+    * */
     @Inject
-    constructor(someDependency: String) {
+    constructor(@AStringDependency1 someDependency: String) {
         this.someDependency = someDependency
     }
 
@@ -68,3 +89,16 @@ class SomeClassThatImplementsAnInterface : SomeOtherInterface {
     }
 
 }
+
+/*
+* These are custom annotation class
+* To mark provider methods which return same data type
+* These should be done for same data type also for same classes or same interfaces
+* */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class AStringDependency1
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class AStringDependency2
